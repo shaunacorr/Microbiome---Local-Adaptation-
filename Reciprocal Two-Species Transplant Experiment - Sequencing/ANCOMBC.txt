@@ -1,0 +1,32 @@
+Bacteria	P_value	log_fold_change	se
+Pirellulaceae	0.002205617	1.326639	0.315189
+Unknown (O: Chitinophagales)	0.004928248	1.436737	0.358073
+Rubritaleaceae	4.19345E-06	2.648777	0.483608
+Arenicellaceae	1.89E-31	2.589665	0.214814
+Rubinisphaeraceae	1.71E-04	-1.582655	0.331742
+Puniceicoccaceae	1.04E-12	4.695446	0.606878
+Schleiferiaceae	2.86E-03	2.843977	0.685783
+Cryomorphaceae	8.40E-05	1.987909	0.404558
+Absconditabacteriales (SR1)	2.94E-02	1.509038	0.424413
+Marinomonadaceae	1.67E-03	3.197635	0.747804
+Fusobacteriaceae	2.96E-04	-0.757537	0.162773
+Unknown (O: Micavibrionales)	3.27E-05	-2.765259	0.542485
+Unkown (C: Polyangia)	1.06E-02	-1.593356	0.416822
+Cyclobacteriaceae	9.22E-03	1.377974	0.357086
+Unknown (O: Ardenticatenales)	9.68E-02	-2.205859	0.68463
+OM190	2.13E-04	1.045195	0.221272
+Pseudohongiellaceae	1.68E-03	-2.811533	0.658066
+Unknown (O: Gammaproteobacteria)	2.90E-03	2.059186	0.497267
+Oligoflexaceae	1.43E-02	1.949011	0.520615
+Moraxellaceae	8.93E-02	2.317737	0.713443
+OM182 clade	1.48E-03	-2.309852	0.536496
+Parcubacteria	9.94E-06	2.699638	0.50742
+Caulobacteraceae	2.03E-14	-4.09572	0.498026
+Weeksellaceae	3.71E-03	2.239924	0.548772
+Nannocystaceae	1.12E-09	2.652735	0.39073
+Ectothiorhodospiraceae	1.80E-11	-2.487234	0.337797
+Unknown (O:Rickettsiales)	4.18E-66	3.302661	0.189354
+Phycisphaeraceae	1.34E-03	2.849777	0.658095
+BIrii41	1.79E-111	4.957297	0.218946
+Beijerinckiaceae	5.92E-12	-2.553804	0.340007
+Candidatus Nomurabacteria	2.31E-07	2.53295	0.424227
