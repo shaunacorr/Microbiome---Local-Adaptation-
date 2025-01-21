@@ -136,8 +136,8 @@ family_rareaggregate_pseq <- microbiome::aggregate_rare(
 family_sub_dulse <- subset_samples(family_rareaggregate_pseq, species == "Palmaria palmata")
 family_sub_fucus <- subset_samples(family_rareaggregate_pseq, species == "Fucus serratus")
 
-# Generate a colour palette
-palette_fam <- colorRampPalette(brewer.pal(12, "Paired"))(51)
+set.seed(NULL)  # Optional: Ensures randomness each time
+palette_fam <- sample(colorRampPalette(brewer.pal(12, "Paired"))(51))
 
 #Plot P. palmaria Graph
 family_dulse <-microbiome::plot_composition(family_sub_dulse, 
@@ -192,6 +192,10 @@ combined_plot
 taxa_together <- plot_grid(combined_plot1, combined_plot, ncol = 2)
 taxa_together
 
+png("Figure2", width = 3500, height = 3500, res = 300)
+print(taxa_together)  # Print the plot to the file
+
+dev.off() 
 ####Rarefaction Curves ####
 
 #Extract ASV table as data frame
@@ -394,7 +398,7 @@ comparisons <- list(
 )
 
 
-ggplot(shannon_long, aes(x = rep, y = Value, fill = rep)) +
+fig1 <-ggplot(shannon_long, aes(x = rep, y = Value, fill = rep)) +
   geom_boxplot() +
   facet_wrap(~Metric, scales = "free_y", nrow = 1) +  # Set nrow to 1
   theme_bw() +
@@ -404,7 +408,7 @@ ggplot(shannon_long, aes(x = rep, y = Value, fill = rep)) +
                                "Palmaria: SSM" = "#660033",
                                "Palmaria: MB" = "#666666",
                                "Palmaria: Uncultured" = "#003300")) +
-  labs(x = "Treatments", y = "Shannon's Diversity") +
+  labs(x = "Treatments", y = "Shannon Diversity") +
   geom_signif(comparisons = comparisons, 
               annotations = c("ns", "**","**","**","**","**","*"),
               y_position = c(1.5,0.7,0.8,0.4,0.7,0.8,0.4),
@@ -436,7 +440,9 @@ ggplot(shannon_long, aes(x = rep, y = Value, fill = rep)) +
     axis.title.y = element_text(size = 12, face = "bold"),
     axis.title.x = element_text(size = 12, face = "bold"),
   )
-
+png("Figure1.png", width = 4000, height = 2000, res = 300)
+print(fig1)  # Print the plot to the file
+dev.off() 
 
 ####BETA Diversity ####
 
@@ -650,9 +656,13 @@ label_b <- textGrob("b)", x = unit(0, "npc"), y = unit(1, "npc"),
 NMDS_Plot_labelled <- arrangeGrob(NMDS_Plot, top = label_a)
 barplots_labelled <- arrangeGrob(barplots, top = label_b)
 
-# Arrange the plots side by side with labels
-grid.arrange(NMDS_Plot_labelled, barplots_labelled)
+# Arrange plots without immediately plotting
+Fig3 <- arrangeGrob(NMDS_Plot_labelled, barplots_labelled)
 
+# Save the arranged plot as a PNG
+png("Figure3.png", width = 3000, height = 3500, res = 300)
+grid.draw(Fig3)  # Draw the grob to the file
+dev.off()
 ####ANCOMBC####
 ancom<- read.delim("ANCOMBC.txt")
 # Create a column to distinguish between enriched and depleted
@@ -660,7 +670,7 @@ ancom <- ancom %>%
   mutate(status = ifelse(log_fold_change > 0, "enriched", "depleted"))
 
 # Plot the data
-ggplot(ancom, aes(x = log_fold_change, y = reorder(Bacteria, log_fold_change), 
+figS3 <-ggplot(ancom, aes(x = log_fold_change, y = reorder(Bacteria, log_fold_change), 
                fill = status)) +
   geom_bar(stat = "identity") +
   geom_errorbarh(aes(xmin = log_fold_change - se, xmax = log_fold_change + se), 
@@ -668,6 +678,10 @@ ggplot(ancom, aes(x = log_fold_change, y = reorder(Bacteria, log_fold_change),
   scale_fill_manual(values = c("enriched" = "#669966", "depleted" = "#660033"),
                     labels = c("depleted" = expression("Depleted in " * italic("P. palmata")), 
                                "enriched" = expression("Enriched in " * italic("F. serratus")))) +
-  labs(x = "Log Fold Change (LFC)", y = "", fill = NULL) +  # Set fill to NULL to remove legend title
+  labs(x = "Log Fold Change (LFC)", y = "", fill = NULL) +  # Set fill to NULL to
+#remove legend title
   theme_minimal()
-
+figS3
+png("FigureS3.png", width = 2500, height = 1500, res = 300)
+grid.draw(figS3)  # Draw the grob to the file
+dev.off()

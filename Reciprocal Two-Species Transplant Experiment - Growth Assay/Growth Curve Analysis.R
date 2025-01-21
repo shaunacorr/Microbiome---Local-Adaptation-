@@ -497,7 +497,10 @@ p2 <- p2 +
 response_plot2 <- response_plot2 + 
   annotate("text", x = -Inf, y = Inf, label = " b)", hjust = 0, vjust = 1, size = 5)
 grid.arrange(p2,response_plot2, nrow=1)
-
+Fig4 <- arrangeGrob(p2, response_plot2, nrow=1)
+png("Figure4.png", width = 3000, height = 1500, res = 300)
+grid.draw(Fig4)  # Draw the grob to the file
+dev.off()
 
 
 

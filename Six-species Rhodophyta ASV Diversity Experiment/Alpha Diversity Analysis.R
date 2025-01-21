@@ -10,6 +10,7 @@ library("viridis")
 library("car")
 library("ggsignif")
 library("multcomp")
+library("grid")
 
 
 ####Import data####
@@ -80,65 +81,115 @@ alpha_summary <- alpha_df1 %>%
     SD_Observed = sd(Observed)
   )
 
-#####Diversity Graph - Fig. 5####
+#Fig.5 Plot####
 
 # Reverse alphabetic order for Microbiome
-alpha_summary$Microbiome <- factor(alpha_summary$Microbiome, levels = rev(sort(unique(alpha_summary$Microbiome))))
+alpha_df1$Microbiome <- factor(alpha_df1$Microbiome, levels = rev(sort(unique(alpha_df1$Microbiome))))
 # Alphabetical order for Agar
-alpha_summary$Agar <- factor(alpha_summary$Agar, levels = sort(unique(alpha_summary$Agar)))
+alpha_df1$Agar <- factor(alpha_df1$Agar, levels = sort(unique(alpha_df1$Agar)))
 
 #Scale by sympatric environment
-# Create the reference values
-palmaria_ref <- alpha_summary[alpha_summary$Microbiome == "Palmaria" & alpha_summary$Agar == "Palmaria", "Mean_Shannon"]
-calli_ref <- alpha_summary[alpha_summary$Microbiome == "Calliblepharis" & alpha_summary$Agar == "Calliblepharis", "Mean_Shannon"]
-cera_ref <- alpha_summary[alpha_summary$Microbiome == "Ceramium" & alpha_summary$Agar == "Ceramium", "Mean_Shannon"]
-lome_ref <- alpha_summary[alpha_summary$Microbiome == "Lomentaria" & alpha_summary$Agar == "Lomentaria", "Mean_Shannon"]
-osmu_ref <- alpha_summary[alpha_summary$Microbiome == "Osmundea" & alpha_summary$Agar == "Osmundea", "Mean_Shannon"]
-chon_ref <- alpha_summary[alpha_summary$Microbiome == "Chondrus" & alpha_summary$Agar == "Chondrus", "Mean_Shannon"]
+ 
 
 # Create a new ref_column using ifelse for each Microbiome
-alpha_summary$ref_column <- NA
+alpha_df1$ref_column <- NA
 
-alpha_summary$ref_column <- ifelse(alpha_summary$Microbiome == "Palmaria", palmaria_ref,
-                                     ifelse(alpha_summary$Microbiome == "Calliblepharis", calli_ref,
-                                            ifelse(alpha_summary$Microbiome == "Ceramium", cera_ref,
-                                                   ifelse(alpha_summary$Microbiome == "Lomentaria", lome_ref,
-                                                          ifelse(alpha_summary$Microbiome == "Osmundea", osmu_ref,
-                                                                 ifelse(alpha_summary$Microbiome == "Chondrus", chon_ref, NA))))))
+alpha_df1$ref_column <- ifelse(alpha_df1$Microbiome == "Palmaria", palmaria_ref,
+                                   ifelse(alpha_df1$Microbiome == "Calliblepharis", calli_ref,
+                                          ifelse(alpha_df1$Microbiome == "Ceramium", cera_ref,
+                                                 ifelse(alpha_df1$Microbiome == "Lomentaria", lome_ref,
+                                                        ifelse(alpha_df1$Microbiome == "Osmundea", osmu_ref,
+                                                               ifelse(alpha_df1$Microbiome == "Chondrus", chon_ref, NA))))))
 
 #Create scaling column
 
-alpha_summary$Mean_Shannon <- as.numeric(as.character(alpha_summary$Mean_Shannon))
-alpha_summary$ref_column <- as.numeric(as.character(alpha_summary$ref_column))
-alpha_summary$shannon_sympatric<-alpha_summary$Mean_Shannon/alpha_summary$ref_column
-alpha_summary$SD_Shannon <- round(alpha_summary$SD_Shannon, 2)
-alpha_summary$sig <- c("","","***","","","","","","**","","","","","","","","","","","","**","","","","***","","***","","","*","","","***","","","")
-alpha_summary$sig <- as.character(alpha_summary$sig)
+alpha_df1$Shannon <- as.numeric(as.character(alpha_df1$Shannon))
+alpha_df1$ref_column <- as.numeric(as.character(alpha_df1$ref_column))
+alpha_df1$shannon_sympatric<-(alpha_df1$Shannon/alpha_df1$ref_column)
 
-#Shannon's Diversity Plot
+sym_summary <- alpha_df1 %>%
+  group_by(Rep, Microbiome, Agar) %>%
+  summarise(
+    Mean_Shannon = mean(shannon_sympatric),
+    SD_Shannon = sd(shannon_sympatric),
+    n = n(),                                               
+    se = SD_Shannon / sqrt(n) 
+  )
 
-ggplot(alpha_summary, aes(x = Agar, y = Microbiome)) +
-  geom_point(aes(size = shannon_sympatric, fill = Mean_Shannon), shape = 21, color = "NA") +
-  geom_text(aes(label = SD_Shannon), vjust = 3.5, size = 3, hjust = 0.5) +
-  geom_text(aes(label = sig), vjust = -1, size = 5, hjust = 0.5) +
-  scale_fill_viridis_c(option = "magma") +
-  scale_size(range = c(3, 15), guide = "none") +
-  labs(title = NULL,
-       x = "Seaweed Derived Agar",
-       y = "Innoculated Microbiome",
-       fill = "Shannon's Diversity") +
-  theme_minimal() +
+#Scale to 0
+sym_summary$scale <- (sym_summary$Mean_Shannon)-1
+
+
+install.packages("ggtext")
+library(ggtext)
+sym_summary$Microbiome <- factor(
+  sym_summary$Microbiome,
+  levels = c("Calliblepharis", "Ceramium", "Chondrus", "Lomentaria", "Osmundea", "Palmaria")
+)
+
+custom_labels <- c(
+  Calliblepharis = "<b><i>Calliblepharis</i></b><br><b>microbiome</b>", 
+  Ceramium = "<b><i>Ceramium</i></b><br><b>microbiome</b>", 
+  Chondrus = "<b><i>Chondrus</i></b><br><b>microbiome</b>", 
+  Lomentaria = "<b><i>Lomentaria</i></b><br><b>microbiome</b>", 
+  Palmaria = "<b><i>Palmaria</i></b><br><b>microbiome</b>", 
+  Osmundea = "<b><i>Osmundea</i></b><br><b>microbiome</b>"
+)
+
+comparisons_micro_cal <- list(
+  c("Calliblepharis", "Ceramium"),
+  c("Calliblepharis", "Chondrus"),
+  c("Calliblepharis", "Lomentaria"),
+  c("Calliblepharis", "Palmaria"),
+  c("Calliblepharis", "Osmundea")
+)
+
+comparisons_micro_lom <- list(
+  c("Lomentaria", "Osmundea")
+)
+comparisons_micro_pal <- list(
+  c("Palmaria", "Osmundea")
+)
+   
+Fig5 <-ggplot(sym_summary, aes(x = Agar, y = scale, fill = Agar)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = scale - se, ymax = scale + se),
+                width = 0.2,
+                color = "black") +
+  facet_wrap(~ Microbiome, scales = "fixed", nrow = 1, labeller = as_labeller(custom_labels)) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +  
+  theme_bw() +
+  scale_fill_viridis_d(option = "D") +  
+  labs(x = "Seaweed-Specific Medium Type", y = "Shannon Diversity Scaled to Sympatric Environment") +
+  geom_signif(comparisons = comparisons_micro_cal, 
+              annotations = c("**", "**","***","***","***"),
+              y_position = c(-0.1,-0.17,-0.24,0.25,-0.31),
+              textsize = 4, data = sym_summary %>% filter(Microbiome == "Calliblepharis"), tip_length = 0) +
+  geom_signif(comparisons = comparisons_micro_lom, 
+              annotations = c("***"),
+              y_position = c(0.03),
+              textsize = 4, data = sym_summary %>% filter(Microbiome == "Lomentaria"), tip_length = 0) +
+  geom_signif(comparisons = comparisons_micro_pal, 
+              annotations = c("*"),
+              y_position = c(0.03),
+              textsize = 4, data = sym_summary %>% filter(Microbiome == "Palmaria"), tip_length = 0) +
   theme(
-    axis.text.x = element_text(vjust = 0.5, face = "italic"),
-    axis.text.y = element_text(face = "italic"),
-    axis.title.x = element_text(vjust = -7, face = "bold"),
-    axis.title.y = element_text(face = "bold"),
-    text = element_text(size = 12),
-    plot.title = element_text(hjust = 0.5),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  ) +
-  scale_x_discrete(position = "top")
+    strip.text = element_markdown(size = 11),  # Ensures Markdown rendering in facet labels
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, face = "italic"),
+    axis.ticks.x = element_line(),
+    panel.spacing = unit(1, "lines"),
+    strip.background = element_rect(fill = "lightgrey"),
+    legend.title = element_blank(),
+    legend.position = "none",
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, face = "bold"),
+    axis.title.x = element_text(size = 12, face = "bold"),
+  )
+
+# Save the arranged plot as a PNG
+png("Figure5.png", width = 2500, height = 1500, res = 300)
+grid.draw(Fig5)  # Draw the grob to the file
+dev.off()
 
 
 #####Summary of Host Environment vs. Microbiome####
@@ -172,7 +223,7 @@ comparisons_agar_sha <- list(
 )
 
 #Plot
-ggplot(alpha_df1, aes(x = Agar, y = Shannon, fill = Agar)) +  
+FigS5 <-ggplot(alpha_df1, aes(x = Agar, y = Shannon, fill = Agar)) +  
   geom_boxplot(color = "black", alpha = 0.7) +  
   geom_jitter(aes(color = Agar), width = 0.2, size = 2, alpha = 0.8) +  
   scale_fill_viridis_d(option = "D") +  
@@ -191,7 +242,10 @@ ggplot(alpha_df1, aes(x = Agar, y = Shannon, fill = Agar)) +
     plot.title = element_text(hjust = 0.5),
     axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, face = "italic")
   )
-
+# Save the arranged plot as a PNG
+png("FigureS5.png", width = 2500, height = 1500, res = 300)
+grid.draw(FigS5)  # Draw the grob to the file
+dev.off()
 
 #### Compare by Sympatric Environment #####
 
@@ -339,16 +393,25 @@ comparisons_micro_pal <- list(
 )
 
 
-ggplot(alpha_df1, aes(x = Agar, y = Shannon, fill = Agar)) +
+# Convert Microbiome to a factor with alphabetical levels
+alpha_df1$Microbiome <- factor(alpha_df1$Microbiome, levels = sort(unique(alpha_df1$Microbiome)))
+
+
+
+alpha_df1$Microbiome <- factor(
+  alpha_df1$Microbiome,
+  levels = c("Calliblepharis", "Ceramium", "Chondrus", "Lomentaria", "Osmundea", "Palmaria")
+)
+FigS4 <-ggplot(alpha_df1, aes(x = Agar, y = Shannon, fill = Agar)) +
   geom_boxplot() +
-  facet_wrap(~Microbiome, scales = "free_y", nrow = 1,labeller = as_labeller(custom_labels)) +
+  facet_wrap(~Microbiome, scales = "free_y", nrow = 1, labeller = as_labeller(custom_labels)) +
   theme_bw() +
   scale_fill_viridis_d(option = "D") +  
   scale_color_viridis_d(option = "D") + 
-  labs(x = "Seaweed Derived Agar", y = "Shannon's Diversity") +
+  labs(x = "Seaweed Derived Agar", y = "Shannon Diversity") +
   geom_signif(comparisons = comparisons_micro_cal, 
               annotations = c("**", "**","***","***","***"),
-              y_position = c(2.05,1.9,1.8,1.6,1.7),
+              y_position = c(2.05, 1.9, 1.8, 1.6, 1.7),
               textsize = 4, data = alpha_df1 %>% filter(Microbiome == "Calliblepharis"), tip_length = 0) +
   geom_signif(comparisons = comparisons_micro_lom, 
               annotations = c("***"),
@@ -370,4 +433,6 @@ ggplot(alpha_df1, aes(x = Agar, y = Shannon, fill = Agar)) +
     axis.title.y = element_text(size = 12, face = "bold"),
     axis.title.x = element_text(size = 12, face = "bold"),
   )
-
+png("FigureS4.png", width = 3000, height = 1500, res = 300)
+grid.draw(FigS4)  # Draw the grob to the file
+dev.off()
